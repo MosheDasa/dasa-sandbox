@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ScreenCapture from "./ScreenCapture";
+import LogViewer from "./LogViewer";
 
 interface Log {
   message: string;
@@ -13,14 +14,17 @@ const DEMOS = [
 
 const containerStyle = {
   padding: "2rem",
-  maxWidth: "1200px",
-  margin: "0 auto",
+  minHeight: "100vh",
+  width: "100%",
+  margin: "0",
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  background: "#f5f7fa",
 };
 
 const headerStyle = {
   marginBottom: "2rem",
+  padding: "0 2rem",
 };
 
 const titleStyle = {
@@ -40,8 +44,9 @@ const tabListStyle = {
   gap: "0.5rem",
   borderBottom: "1px solid #e0e0e0",
   marginBottom: "2rem",
-  padding: "0",
+  padding: "0 2rem",
   listStyle: "none",
+  background: "#fff",
 };
 
 const tabStyle = (isActive: boolean) => ({
@@ -56,24 +61,14 @@ const tabStyle = (isActive: boolean) => ({
 });
 
 const contentContainerStyle = {
-  display: "grid",
-  gridTemplateColumns: "1fr 300px",
-  gap: "2rem",
   background: "#fff",
-  borderRadius: "8px",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   padding: "2rem",
+  minHeight: "calc(100vh - 300px)",
 };
 
-const logsAreaStyle = {
-  background: "#1a1a1a",
-  color: "#fff",
-  padding: "1rem",
-  borderRadius: "6px",
-  fontFamily: "monospace",
-  fontSize: "0.9rem",
-  overflowY: "auto" as const,
-  maxHeight: "400px",
+const mainContentStyle = {
+  maxWidth: "1600px",
+  margin: "0 auto",
 };
 
 const TabsContainer: React.FC = () => {
@@ -111,48 +106,9 @@ const TabsContainer: React.FC = () => {
       </ul>
 
       <div style={contentContainerStyle}>
-        {ActiveComponent && <ActiveComponent onLog={handleLog} />}
-
-        <div style={logsAreaStyle}>
-          <h3 style={{ margin: "0 0 1rem", color: "#fff" }}>Logs</h3>
-          {logs.map((log, index) => (
-            <div
-              key={index}
-              style={{
-                margin: "0.5rem 0",
-                padding: "0.5rem",
-                borderRadius: "4px",
-                background: "rgba(255,255,255,0.05)",
-              }}
-            >
-              <span
-                style={{
-                  color: "#888",
-                  fontSize: "0.8rem",
-                  marginRight: "0.5rem",
-                }}
-              >
-                {log.timestamp.toLocaleTimeString()}
-              </span>
-              <span
-                style={{
-                  color:
-                    log.type === "info"
-                      ? "#64b5f6"
-                      : log.type === "error"
-                      ? "#ef5350"
-                      : "#81c784",
-                }}
-              >
-                {log.message}
-              </span>
-            </div>
-          ))}
-          {logs.length === 0 && (
-            <div style={{ color: "#666", fontStyle: "italic" }}>
-              No logs yet...
-            </div>
-          )}
+        <div style={mainContentStyle}>
+          {ActiveComponent && <ActiveComponent onLog={handleLog} />}
+          <LogViewer logs={logs} />
         </div>
       </div>
     </div>
