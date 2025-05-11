@@ -4,6 +4,7 @@ import { theme } from "../../styles/theme";
 
 interface LogViewerProps {
   logs: Log[];
+  onClear: () => void;
 }
 
 const styles = {
@@ -111,13 +112,15 @@ const styles = {
   },
 };
 
-const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
+const LogViewer: React.FC<LogViewerProps> = ({ logs, onClear }) => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h3 style={styles.title}>Logs</h3>
         <span style={styles.badge}>{logs.length} entries</span>
-        <button style={styles.clearButton}>Clear</button>
+        <button style={styles.clearButton} onClick={onClear}>
+          Clear
+        </button>
       </div>
 
       <div style={styles.logsContainer}>

@@ -126,6 +126,10 @@ const TabsContainer: React.FC = () => {
     setLogs((prev) => [...prev, { message, type, timestamp: new Date() }]);
   };
 
+  const handleClearLogs = () => {
+    setLogs([]);
+  };
+
   const ActiveComponent = DEMOS.find(
     (demo) => demo.id === activeTab
   )?.component;
@@ -164,7 +168,7 @@ const TabsContainer: React.FC = () => {
               {ActiveComponent && <ActiveComponent onLog={handleLog} />}
             </div>
           </div>
-          <LogViewer logs={logs} />
+          <LogViewer logs={logs} onClear={handleClearLogs} />
         </div>
       </main>
     </div>
