@@ -69,6 +69,10 @@ const contentContainerStyle = {
 const mainContentStyle = {
   maxWidth: "1600px",
   margin: "0 auto",
+  display: "grid",
+  gridTemplateColumns: "1fr 400px",
+  gap: "2rem",
+  alignItems: "start",
 };
 
 const TabsContainer: React.FC = () => {
@@ -87,9 +91,6 @@ const TabsContainer: React.FC = () => {
     <div style={containerStyle}>
       <header style={headerStyle}>
         <h1 style={titleStyle}>Dasa Sandbox</h1>
-        <p style={descriptionStyle}>
-          A collection of POC demos for quick testing and experimentation
-        </p>
       </header>
 
       <ul style={tabListStyle}>
@@ -107,7 +108,7 @@ const TabsContainer: React.FC = () => {
 
       <div style={contentContainerStyle}>
         <div style={mainContentStyle}>
-          {ActiveComponent && <ActiveComponent onLog={handleLog} />}
+          <div>{ActiveComponent && <ActiveComponent onLog={handleLog} />}</div>
           <LogViewer logs={logs} />
         </div>
       </div>

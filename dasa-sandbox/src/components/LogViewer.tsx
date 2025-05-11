@@ -21,9 +21,10 @@ const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
         fontFamily: "monospace",
         fontSize: "0.9rem",
         overflowY: "auto" as const,
-        height: "200px",
+        height: "calc(100vh - 300px)",
         width: "100%",
-        marginTop: "2rem",
+        position: "sticky" as const,
+        top: "2rem",
       }}
     >
       <h3
