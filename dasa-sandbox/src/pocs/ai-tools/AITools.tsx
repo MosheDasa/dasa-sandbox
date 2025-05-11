@@ -49,21 +49,23 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column" as const,
-    gap: theme.spacing.xl,
+    gap: theme.spacing.lg,
     height: "100%",
     overflow: "hidden",
   },
   toolGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: theme.spacing.xl,
-    padding: theme.spacing.md,
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: theme.spacing.md,
+    padding: theme.spacing.sm,
     overflow: "auto",
+    flexShrink: 0,
+    maxHeight: "180px", // Limit height of tool selection area
   },
   toolCard: (isActive: boolean) => ({
     background: theme.colors.background.elevated,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
+    padding: theme.spacing.md,
     border: `1px solid ${
       isActive ? theme.colors.primary.main : theme.colors.border.default
     }`,
@@ -76,44 +78,49 @@ const styles = {
     },
   }),
   toolIcon: {
-    fontSize: "2rem",
-    marginBottom: theme.spacing.md,
+    fontSize: "1.5rem",
+    marginBottom: theme.spacing.sm,
   },
   toolTitle: {
     ...theme.typography.h3,
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
+    fontSize: "1rem",
   },
   toolDescription: {
     ...theme.typography.body,
     color: theme.colors.text.secondary,
+    fontSize: "0.875rem",
+    lineHeight: "1.4",
   },
   workArea: {
     flex: 1,
     minHeight: 0,
     background: theme.colors.background.paper,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
+    padding: theme.spacing.lg,
     display: "flex",
     flexDirection: "column" as const,
-    gap: theme.spacing.xl,
-    overflow: "auto",
+    gap: theme.spacing.md,
+    overflow: "hidden",
   },
   inputArea: {
     display: "flex",
-    gap: theme.spacing.xl,
+    gap: theme.spacing.lg,
+    flexShrink: 0,
+    maxHeight: "150px",
   },
   textInput: {
     flex: 1,
     background: theme.colors.background.elevated,
     border: `1px solid ${theme.colors.border.default}`,
     borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.mono,
     fontSize: theme.typography.body.fontSize,
     resize: "none" as const,
-    minHeight: "150px",
+    height: "150px",
     "&:focus": {
       outline: "none",
       borderColor: theme.colors.primary.main,
@@ -137,16 +144,23 @@ const styles = {
       color: theme.colors.primary.main,
     },
   },
+  controls: {
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing.md,
+    padding: `${theme.spacing.sm} 0`,
+    borderBottom: `1px solid ${theme.colors.border.default}`,
+    flexShrink: 0,
+  },
   button: {
     background: theme.colors.primary.main,
     color: theme.colors.primary.contrastText,
     border: "none",
-    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
+    padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
     borderRadius: theme.borderRadius.md,
     cursor: "pointer",
     ...theme.typography.body,
     fontWeight: 600,
-    alignSelf: "flex-start",
     display: "flex",
     alignItems: "center",
     gap: theme.spacing.sm,
@@ -158,23 +172,62 @@ const styles = {
     "&:active": {
       transform: "translateY(0)",
     },
+    "&:disabled": {
+      opacity: 0.7,
+      cursor: "not-allowed",
+      transform: "none",
+    },
   },
   resultArea: {
     flex: 1,
     minHeight: 0,
     background: theme.colors.background.elevated,
     borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.xl,
+    padding: theme.spacing.lg,
     overflow: "auto",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: theme.spacing.md,
   },
   resultImage: {
     maxWidth: "100%",
+    maxHeight: "500px",
+    objectFit: "contain" as const,
     borderRadius: theme.borderRadius.md,
+    alignSelf: "center",
   },
   resultText: {
     ...theme.typography.body,
     color: theme.colors.text.primary,
     whiteSpace: "pre-wrap" as const,
+    lineHeight: "1.6",
+  },
+  processingIndicator: {
+    textAlign: "center" as const,
+    color: theme.colors.text.secondary,
+    padding: theme.spacing.xl,
+  },
+  resultHeader: {
+    ...theme.typography.h3,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.md,
+    fontSize: "1.1rem",
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    gap: theme.spacing.md,
+  },
+  resultStatus: {
+    fontSize: "0.9rem",
+    color: theme.colors.text.secondary,
+    fontWeight: "normal",
+  },
+  resultError: {
+    color: theme.colors.error.main,
+    padding: theme.spacing.md,
+    background: `${theme.colors.error.light}15`,
+    borderRadius: theme.borderRadius.md,
+    fontSize: "0.9rem",
   },
 };
 
@@ -215,6 +268,7 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
     }
 
     setIsProcessing(true);
+    setResult(null); // Reset previous result
     onLog(`Processing with ${selectedTool}...`, "info");
 
     try {
@@ -222,7 +276,8 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
 
       switch (selectedTool) {
         case "ocr":
-          processedResult = await performOCR(inputImage!);
+          if (!inputImage) throw new Error("No image selected");
+          processedResult = await performOCR(inputImage);
           break;
         case "text-to-image":
           processedResult = await generateImage(inputText);
@@ -237,17 +292,34 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
           throw new Error("Invalid tool selected");
       }
 
-      setResult(processedResult);
+      if (!processedResult) {
+        throw new Error("No result received from the API");
+      }
+
       onLog("Processing complete!", "success");
+      setResult(processedResult);
     } catch (error: unknown) {
-      onLog(
-        `Error: ${
-          error instanceof Error ? error.message : "An unknown error occurred"
-        }`,
-        "error"
-      );
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      onLog(`Error: ${errorMessage}`, "error");
+      setResult(`Error: ${errorMessage}`); // Show error in result area
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const getResultTitle = () => {
+    switch (selectedTool) {
+      case "ocr":
+        return "Extracted Text";
+      case "text-to-image":
+        return "Generated Image";
+      case "summarize":
+        return "Summary";
+      case "translate":
+        return "Translation";
+      default:
+        return "Result";
     }
   };
 
@@ -278,7 +350,19 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
                   onChange={handleImageUpload}
                   style={{ display: "none" }}
                 />
-                {inputImage ? inputImage.name : "Upload Image"}
+                {inputImage ? (
+                  <img
+                    src={URL.createObjectURL(inputImage)}
+                    alt="Preview"
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                ) : (
+                  "Upload Image"
+                )}
               </label>
             ) : (
               <textarea
@@ -296,27 +380,52 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
             )}
           </div>
 
-          <button
-            style={{
-              ...styles.button,
-              opacity: isProcessing ? 0.7 : 1,
-              cursor: isProcessing ? "not-allowed" : "pointer",
-            }}
-            onClick={handleProcess}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing..." : "Process"}
-          </button>
+          <div style={styles.controls}>
+            <button
+              style={styles.button}
+              onClick={handleProcess}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : "Process"}
+            </button>
+          </div>
 
-          {result && (
-            <div style={styles.resultArea}>
-              {selectedTool === "text-to-image" ? (
-                <img src={result} alt="Generated" style={styles.resultImage} />
-              ) : (
-                <pre style={styles.resultText}>{result}</pre>
-              )}
-            </div>
-          )}
+          <div style={styles.resultArea}>
+            {isProcessing ? (
+              <div style={styles.processingIndicator}>
+                <div>Processing your request...</div>
+                <div style={styles.resultStatus}>
+                  {selectedTool === "ocr"
+                    ? "Extracting text from image..."
+                    : selectedTool === "text-to-image"
+                    ? "Generating image from text..."
+                    : selectedTool === "summarize"
+                    ? "Summarizing text..."
+                    : "Translating text..."}
+                </div>
+              </div>
+            ) : result ? (
+              <>
+                <div style={styles.resultHeader}>
+                  {getResultTitle()}
+                  {result.startsWith("Error:") && (
+                    <span style={styles.resultStatus}>Failed</span>
+                  )}
+                </div>
+                {result.startsWith("Error:") ? (
+                  <div style={styles.resultError}>{result}</div>
+                ) : selectedTool === "text-to-image" ? (
+                  <img
+                    src={result}
+                    alt="Generated"
+                    style={styles.resultImage}
+                  />
+                ) : (
+                  <pre style={styles.resultText}>{result}</pre>
+                )}
+              </>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

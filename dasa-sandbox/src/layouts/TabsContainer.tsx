@@ -93,6 +93,7 @@ const styles = {
     overflow: "hidden",
     display: "flex",
     flexDirection: "column" as const,
+    minHeight: 0,
   },
   toolbar: {
     display: "flex",
@@ -112,6 +113,8 @@ const styles = {
     minHeight: 0,
     padding: theme.spacing.xl,
     overflow: "auto",
+    display: "flex",
+    flexDirection: "column" as const,
   },
 };
 

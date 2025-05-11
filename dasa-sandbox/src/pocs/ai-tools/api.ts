@@ -1,4 +1,4 @@
-// OCR using Tesseract.js (client-side)
+// OCR using OCR.space API
 export const performOCR = async (imageFile: File): Promise<string> => {
   const formData = new FormData();
   formData.append("file", imageFile);
@@ -13,9 +13,19 @@ export const performOCR = async (imageFile: File): Promise<string> => {
     });
 
     const data = await response.json();
+    console.log("OCR Response:", data); // Debug log
+
+    if (!data.ParsedResults?.[0]?.ParsedText) {
+      throw new Error("Failed to extract text from image");
+    }
+
     return data.ParsedResults[0].ParsedText;
   } catch (error) {
-    throw new Error("OCR processing failed");
+    console.error("OCR Error:", error);
+    throw new Error(
+      "OCR processing failed: " +
+        (error instanceof Error ? error.message : "Unknown error")
+    );
   }
 };
 
@@ -32,9 +42,19 @@ export const generateImage = async (prompt: string): Promise<string> => {
     });
 
     const data = await response.json();
+    console.log("Image Generation Response:", data); // Debug log
+
+    if (!data.output_url) {
+      throw new Error("No image URL received from the service");
+    }
+
     return data.output_url;
   } catch (error) {
-    throw new Error("Image generation failed");
+    console.error("Image Generation Error:", error);
+    throw new Error(
+      "Image generation failed: " +
+        (error instanceof Error ? error.message : "Unknown error")
+    );
   }
 };
 
@@ -59,9 +79,19 @@ export const summarizeText = async (text: string): Promise<string> => {
     );
 
     const data = await response.json();
+    console.log("Summarization Response:", data); // Debug log
+
+    if (!data.summary) {
+      throw new Error("No summary received from the service");
+    }
+
     return data.summary;
   } catch (error) {
-    throw new Error("Text summarization failed");
+    console.error("Summarization Error:", error);
+    throw new Error(
+      "Text summarization failed: " +
+        (error instanceof Error ? error.message : "Unknown error")
+    );
   }
 };
 
@@ -85,8 +115,18 @@ export const translateText = async (
     });
 
     const data = await response.json();
+    console.log("Translation Response:", data); // Debug log
+
+    if (!data.translatedText) {
+      throw new Error("No translation received from the service");
+    }
+
     return data.translatedText;
   } catch (error) {
-    throw new Error("Translation failed");
+    console.error("Translation Error:", error);
+    throw new Error(
+      "Translation failed: " +
+        (error instanceof Error ? error.message : "Unknown error")
+    );
   }
 };
