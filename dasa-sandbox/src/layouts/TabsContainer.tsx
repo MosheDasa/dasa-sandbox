@@ -24,24 +24,6 @@ const styles = {
     flexDirection: "column" as const,
     overflow: "hidden",
   },
-  header: {
-    background: theme.colors.background.paper,
-    borderBottom: `1px solid ${theme.colors.border.default}`,
-    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
-    flexShrink: 0,
-  },
-  headerContent: {
-    maxWidth: "1800px",
-    margin: "0 auto",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    ...theme.typography.h1,
-    color: theme.colors.text.primary,
-    margin: 0,
-  },
   tabList: {
     background: theme.colors.background.paper,
     borderBottom: `1px solid ${theme.colors.border.default}`,
@@ -55,7 +37,7 @@ const styles = {
     margin: "0 auto",
     display: "flex",
     gap: theme.spacing.md,
-    padding: `0 ${theme.spacing.xl}`,
+    padding: `${theme.spacing.md} ${theme.spacing.xl}`,
   },
   tab: (isActive: boolean) => ({
     padding: `${theme.spacing.md} ${theme.spacing.lg}`,
@@ -138,12 +120,6 @@ const TabsContainer: React.FC = () => {
 
   return (
     <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <h1 style={styles.title}>Dasa Sandbox</h1>
-        </div>
-      </header>
-
       <nav style={styles.tabList}>
         <div style={styles.tabListContent}>
           {DEMOS.map((demo) => (
