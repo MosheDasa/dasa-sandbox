@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ScreenCapture from "./ScreenCapture";
+import ScreenCapture from "./pocs/ScreenCapture";
 import LogViewer from "./LogViewer";
 
 interface Log {
