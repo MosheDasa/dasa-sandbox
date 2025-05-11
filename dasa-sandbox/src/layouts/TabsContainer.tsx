@@ -31,7 +31,7 @@ const styles = {
     flexShrink: 0,
   },
   headerContent: {
-    maxWidth: "1600px",
+    maxWidth: "1800px",
     margin: "0 auto",
     display: "flex",
     alignItems: "center",
@@ -51,7 +51,7 @@ const styles = {
     flexShrink: 0,
   },
   tabListContent: {
-    maxWidth: "1600px",
+    maxWidth: "1800px",
     margin: "0 auto",
     display: "flex",
     gap: theme.spacing.md,
@@ -81,10 +81,10 @@ const styles = {
   },
   mainContent: {
     height: "100%",
-    maxWidth: "1600px",
+    maxWidth: "1800px",
     margin: "0 auto",
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) 400px",
+    gridTemplateColumns: "minmax(0, 1fr) 320px",
     gap: theme.spacing.xl,
   },
   demoArea: {

@@ -1,7 +1,16 @@
 import React, { useState } from "react";
 import { PocComponentProps } from "../../types/common";
 import { theme } from "../../styles/theme";
-import { performOCR, generateImage, summarizeText, translateText } from "./api";
+import {
+  performOCR,
+  generateImage,
+  summarizeText,
+  translateText,
+  OCRResponse,
+  ImageGenerationResponse,
+  SummarizationResponse,
+  TranslationResponse,
+} from "./api";
 
 type Tool = "ocr" | "text-to-image" | "summarize" | "translate";
 
@@ -45,82 +54,195 @@ const TOOLS: ToolInfo[] = [
   },
 ];
 
+interface ServiceResult {
+  type: Tool;
+  rawResponse?:
+    | OCRResponse
+    | ImageGenerationResponse
+    | SummarizationResponse
+    | TranslationResponse;
+  processedResult: string;
+  timestamp: Date;
+  status: "success" | "error";
+  originalInput: string | File;
+}
+
+interface ResultDisplayProps {
+  result: ServiceResult;
+  style?: React.CSSProperties;
+}
+
+const ResultDisplay: React.FC<ResultDisplayProps> = ({ result, style }) => {
+  return (
+    <div style={{ ...styles.resultContainer, ...style }}>
+      <div style={styles.resultHeader}>
+        <div style={styles.resultTitle}>{getResultTitle(result.type)}</div>
+        <div style={styles.resultMeta}>
+          <span style={styles.resultStatus}>
+            {result.status === "success" ? "✓ Success" : "✗ Failed"}
+          </span>
+          <span style={styles.resultTime}>
+            {result.timestamp.toLocaleTimeString()}
+          </span>
+        </div>
+      </div>
+
+      <div style={styles.resultSections}>
+        {/* Application Result Section */}
+        <div style={styles.resultSection}>
+          <div style={styles.sectionHeader}>Application Result</div>
+          <div style={styles.sectionContent}>
+            {result.status === "error" ? (
+              <div style={styles.resultError}>{result.processedResult}</div>
+            ) : result.type === "text-to-image" ? (
+              <img
+                src={result.processedResult}
+                alt="Generated"
+                style={styles.resultImage}
+              />
+            ) : (
+              <pre style={styles.resultText}>{result.processedResult}</pre>
+            )}
+          </div>
+        </div>
+
+        {/* API Response Section */}
+        <div style={styles.resultSection}>
+          <div style={styles.sectionHeader}>API Response</div>
+          <div style={styles.sectionContent}>
+            <pre style={styles.rawResponse}>
+              {JSON.stringify(result.rawResponse || {}, null, 2)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const getResultTitle = (tool: Tool): string => {
+  switch (tool) {
+    case "ocr":
+      return "Extracted Text";
+    case "text-to-image":
+      return "Generated Image";
+    case "summarize":
+      return "Summary";
+    case "translate":
+      return "Translation";
+    default:
+      return "Result";
+  }
+};
+
 const styles = {
   container: {
     display: "flex",
     flexDirection: "column" as const,
-    gap: theme.spacing.lg,
+    gap: theme.spacing.sm,
     height: "100%",
     overflow: "hidden",
+    padding: 0,
+    width: "100%",
+    maxWidth: "100%",
   },
   toolGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    display: "flex",
     gap: theme.spacing.md,
-    padding: theme.spacing.sm,
-    overflow: "auto",
+    padding: theme.spacing.md,
     flexShrink: 0,
-    maxHeight: "180px", // Limit height of tool selection area
+    minHeight: "90px",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    background: theme.colors.background.paper,
+    flexWrap: "wrap" as const,
+    overflow: "auto",
   },
   toolCard: (isActive: boolean) => ({
     background: theme.colors.background.elevated,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.md,
-    border: `1px solid ${
-      isActive ? theme.colors.primary.main : theme.colors.border.default
-    }`,
+    borderRadius: theme.borderRadius.md,
+    padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+    border: `2px solid ${isActive ? theme.colors.primary.main : "transparent"}`,
     cursor: "pointer",
     transition: "all 0.2s ease",
+    flex: "1 1 auto",
+    minWidth: "180px",
+    maxWidth: "220px",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: isActive ? theme.shadows.md : theme.shadows.sm,
     "&:hover": {
       transform: "translateY(-2px)",
-      boxShadow: theme.shadows.md,
+      boxShadow: theme.shadows.lg,
       borderColor: theme.colors.primary.main,
+      background: `${theme.colors.background.elevated}dd`,
     },
   }),
   toolIcon: {
     fontSize: "1.5rem",
     marginBottom: theme.spacing.sm,
+    textAlign: "center" as const,
+    color: theme.colors.primary.main,
   },
   toolTitle: {
     ...theme.typography.h3,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
     fontSize: "1rem",
+    fontWeight: "600",
+    textAlign: "center" as const,
   },
   toolDescription: {
     ...theme.typography.body,
     color: theme.colors.text.secondary,
-    fontSize: "0.875rem",
+    fontSize: "0.85rem",
     lineHeight: "1.4",
+    textAlign: "center" as const,
+    flex: 1,
+    display: "-webkit-box",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "90%",
+    margin: "0 auto",
   },
   workArea: {
     flex: 1,
     minHeight: 0,
     background: theme.colors.background.paper,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
+    borderRadius: 0,
+    padding: theme.spacing.sm,
     display: "flex",
     flexDirection: "column" as const,
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
     overflow: "hidden",
+    width: "100%",
+    maxWidth: "100%",
   },
   inputArea: {
     display: "flex",
-    gap: theme.spacing.lg,
+    gap: theme.spacing.md,
     flexShrink: 0,
-    maxHeight: "150px",
+    height: "70px",
+    width: "100%",
+    maxWidth: "100%",
   },
   textInput: {
     flex: 1,
     background: theme.colors.background.elevated,
     border: `1px solid ${theme.colors.border.default}`,
-    borderRadius: theme.borderRadius.md,
-    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
     color: theme.colors.text.primary,
     fontFamily: theme.typography.fontFamily.mono,
-    fontSize: theme.typography.body.fontSize,
+    fontSize: "0.9rem",
     resize: "none" as const,
-    height: "150px",
+    height: "100%",
+    width: "100%",
     "&:focus": {
       outline: "none",
       borderColor: theme.colors.primary.main,
@@ -128,8 +250,8 @@ const styles = {
     },
   },
   imageInput: {
-    width: "150px",
-    height: "150px",
+    width: "80px",
+    height: "80px",
     background: theme.colors.background.elevated,
     border: `2px dashed ${theme.colors.border.default}`,
     borderRadius: theme.borderRadius.md,
@@ -148,9 +270,10 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: theme.spacing.md,
-    padding: `${theme.spacing.sm} 0`,
+    padding: `${theme.spacing.xs} 0`,
     borderBottom: `1px solid ${theme.colors.border.default}`,
     flexShrink: 0,
+    height: "40px",
   },
   button: {
     background: theme.colors.primary.main,
@@ -159,12 +282,13 @@ const styles = {
     padding: `${theme.spacing.sm} ${theme.spacing.lg}`,
     borderRadius: theme.borderRadius.md,
     cursor: "pointer",
-    ...theme.typography.body,
+    fontSize: "0.9rem",
     fontWeight: 600,
     display: "flex",
     alignItems: "center",
     gap: theme.spacing.sm,
     transition: "all 0.2s ease",
+    height: "32px",
     "&:hover": {
       background: theme.colors.primary.dark,
       transform: "translateY(-1px)",
@@ -178,55 +302,132 @@ const styles = {
       transform: "none",
     },
   },
-  resultArea: {
-    flex: 1,
-    minHeight: 0,
-    background: theme.colors.background.elevated,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    overflow: "auto",
+  resultContainer: {
     display: "flex",
     flexDirection: "column" as const,
-    gap: theme.spacing.md,
-  },
-  resultImage: {
-    maxWidth: "100%",
-    maxHeight: "500px",
-    objectFit: "contain" as const,
-    borderRadius: theme.borderRadius.md,
-    alignSelf: "center",
-  },
-  resultText: {
-    ...theme.typography.body,
-    color: theme.colors.text.primary,
-    whiteSpace: "pre-wrap" as const,
-    lineHeight: "1.6",
-  },
-  processingIndicator: {
-    textAlign: "center" as const,
-    color: theme.colors.text.secondary,
-    padding: theme.spacing.xl,
+    gap: theme.spacing.sm,
+    background: theme.colors.background.elevated,
+    borderRadius: theme.borderRadius.sm,
+    padding: theme.spacing.sm,
+    flex: 1,
+    minHeight: 0,
+    overflow: "hidden",
+    width: "100%",
   },
   resultHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.xs,
+    flexShrink: 0,
+    height: "32px",
+  },
+  resultTitle: {
     ...theme.typography.h3,
     color: theme.colors.text.primary,
-    marginBottom: theme.spacing.md,
-    fontSize: "1.1rem",
+    fontSize: "1rem",
     fontWeight: 600,
+  },
+  resultMeta: {
     display: "flex",
     alignItems: "center",
     gap: theme.spacing.md,
   },
   resultStatus: {
-    fontSize: "0.9rem",
+    fontSize: "0.85rem",
     color: theme.colors.text.secondary,
-    fontWeight: "normal",
+  },
+  resultTime: {
+    fontSize: "0.85rem",
+    color: theme.colors.text.secondary,
+  },
+  resultSections: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr) 300px",
+    gap: theme.spacing.lg,
+    flex: 1,
+    minHeight: 0,
+    overflow: "hidden",
+    width: "100%",
+    maxWidth: "100%",
+  },
+  resultSection: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: theme.spacing.md,
+    background: theme.colors.background.paper,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.lg,
+    overflow: "hidden",
+    minHeight: 0,
+    width: "100%",
+    boxShadow: theme.shadows.sm,
+  },
+  sectionHeader: {
+    ...theme.typography.h3,
+    color: theme.colors.text.primary,
+    fontSize: "1.1rem",
+    fontWeight: 600,
+    paddingBottom: theme.spacing.sm,
+    borderBottom: `1px solid ${theme.colors.border.default}`,
+    flexShrink: 0,
+    height: "auto",
+    marginBottom: theme.spacing.sm,
+  },
+  sectionContent: {
+    flex: 1,
+    minHeight: 0,
+    overflow: "auto",
+    padding: theme.spacing.md,
+    width: "100%",
+    background: theme.colors.background.elevated,
+    borderRadius: theme.borderRadius.md,
+  },
+  resultText: {
+    margin: 0,
+    whiteSpace: "pre-wrap" as const,
+    fontSize: "1rem",
+    lineHeight: "1.6",
+    color: theme.colors.text.primary,
+    height: "100%",
+    width: "100%",
+    overflow: "auto",
+    padding: theme.spacing.lg,
+    fontFamily: theme.typography.fontFamily.sans,
+    letterSpacing: "0.01em",
+  },
+  rawResponse: {
+    background: theme.colors.background.elevated,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.sm,
+    fontSize: "0.85rem",
+    overflow: "auto",
+    height: "100%",
+    width: "100%",
+    margin: 0,
+    color: theme.colors.text.secondary,
+    fontFamily: theme.typography.fontFamily.mono,
+    lineHeight: "1.4",
+  },
+  resultImage: {
+    maxWidth: "100%",
+    height: "100%",
+    objectFit: "contain" as const,
+    borderRadius: theme.borderRadius.md,
+    background: theme.colors.background.elevated,
+    padding: theme.spacing.xs,
   },
   resultError: {
     color: theme.colors.error.main,
     padding: theme.spacing.md,
     background: `${theme.colors.error.light}15`,
     borderRadius: theme.borderRadius.md,
+    fontSize: "0.9rem",
+  },
+  processingIndicator: {
+    textAlign: "center" as const,
+    color: theme.colors.text.secondary,
+    padding: theme.spacing.lg,
     fontSize: "0.9rem",
   },
 };
@@ -308,21 +509,6 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
     }
   };
 
-  const getResultTitle = () => {
-    switch (selectedTool) {
-      case "ocr":
-        return "Extracted Text";
-      case "text-to-image":
-        return "Generated Image";
-      case "summarize":
-        return "Summary";
-      case "translate":
-        return "Translation";
-      default:
-        return "Result";
-    }
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.toolGrid}>
@@ -390,42 +576,33 @@ const AITools: React.FC<PocComponentProps> = ({ onLog }) => {
             </button>
           </div>
 
-          <div style={styles.resultArea}>
-            {isProcessing ? (
-              <div style={styles.processingIndicator}>
-                <div>Processing your request...</div>
-                <div style={styles.resultStatus}>
-                  {selectedTool === "ocr"
-                    ? "Extracting text from image..."
-                    : selectedTool === "text-to-image"
-                    ? "Generating image from text..."
-                    : selectedTool === "summarize"
-                    ? "Summarizing text..."
-                    : "Translating text..."}
-                </div>
+          {isProcessing ? (
+            <div style={styles.processingIndicator}>
+              <div>Processing your request...</div>
+              <div style={styles.resultStatus}>
+                {selectedTool === "ocr"
+                  ? "Extracting text from image..."
+                  : selectedTool === "text-to-image"
+                  ? "Generating image from text..."
+                  : selectedTool === "summarize"
+                  ? "Summarizing text..."
+                  : "Translating text..."}
               </div>
-            ) : result ? (
-              <>
-                <div style={styles.resultHeader}>
-                  {getResultTitle()}
-                  {result.startsWith("Error:") && (
-                    <span style={styles.resultStatus}>Failed</span>
-                  )}
-                </div>
-                {result.startsWith("Error:") ? (
-                  <div style={styles.resultError}>{result}</div>
-                ) : selectedTool === "text-to-image" ? (
-                  <img
-                    src={result}
-                    alt="Generated"
-                    style={styles.resultImage}
-                  />
-                ) : (
-                  <pre style={styles.resultText}>{result}</pre>
-                )}
-              </>
-            ) : null}
-          </div>
+            </div>
+          ) : result ? (
+            <ResultDisplay
+              result={{
+                type: selectedTool,
+                processedResult: result,
+                timestamp: new Date(),
+                status: result.startsWith("Error:") ? "error" : "success",
+                originalInput:
+                  selectedTool === "ocr" && inputImage
+                    ? inputImage
+                    : inputText || "",
+              }}
+            />
+          ) : null}
         </div>
       )}
     </div>

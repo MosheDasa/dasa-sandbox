@@ -1,3 +1,34 @@
+// API Response Types
+export interface OCRResponse {
+  ParsedResults: Array<{
+    ParsedText: string;
+    ErrorMessage?: string;
+  }>;
+  IsErroredOnProcessing: boolean;
+  ErrorMessage?: string;
+}
+
+export interface ImageGenerationResponse {
+  output_url: string;
+  status?: string;
+  error?: string;
+}
+
+export interface SummarizationResponse {
+  summary: string;
+  status: string;
+  error?: string;
+}
+
+export interface TranslationResponse {
+  translatedText: string;
+  detectedLanguage?: {
+    confidence: number;
+    language: string;
+  };
+  error?: string;
+}
+
 // OCR using OCR.space API
 export const performOCR = async (imageFile: File): Promise<string> => {
   const formData = new FormData();
@@ -12,8 +43,12 @@ export const performOCR = async (imageFile: File): Promise<string> => {
       body: formData,
     });
 
-    const data = await response.json();
-    console.log("OCR Response:", data); // Debug log
+    const data: OCRResponse = await response.json();
+    console.log("OCR Response:", data);
+
+    if (data.IsErroredOnProcessing || data.ErrorMessage) {
+      throw new Error(data.ErrorMessage || "OCR processing failed");
+    }
 
     if (!data.ParsedResults?.[0]?.ParsedText) {
       throw new Error("Failed to extract text from image");
@@ -41,11 +76,11 @@ export const generateImage = async (prompt: string): Promise<string> => {
       body: JSON.stringify({ text: prompt }),
     });
 
-    const data = await response.json();
-    console.log("Image Generation Response:", data); // Debug log
+    const data: ImageGenerationResponse = await response.json();
+    console.log("Image Generation Response:", data);
 
-    if (!data.output_url) {
-      throw new Error("No image URL received from the service");
+    if (data.error || !data.output_url) {
+      throw new Error(data.error || "No image URL received from the service");
     }
 
     return data.output_url;
@@ -78,11 +113,11 @@ export const summarizeText = async (text: string): Promise<string> => {
       }
     );
 
-    const data = await response.json();
-    console.log("Summarization Response:", data); // Debug log
+    const data: SummarizationResponse = await response.json();
+    console.log("Summarization Response:", data);
 
-    if (!data.summary) {
-      throw new Error("No summary received from the service");
+    if (data.error || !data.summary) {
+      throw new Error(data.error || "No summary received from the service");
     }
 
     return data.summary;
@@ -114,8 +149,8 @@ export const translateText = async (
       }),
     });
 
-    const data = await response.json();
-    console.log("Translation Response:", data); // Debug log
+    const data: TranslationResponse = await response.json();
+    console.log("Translation Response:", data);
 
     if (!data.translatedText) {
       throw new Error("No translation received from the service");
