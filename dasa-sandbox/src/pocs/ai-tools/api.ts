@@ -38,7 +38,7 @@ export const performOCR = async (imageFile: File): Promise<string> => {
     const response = await fetch("https://api.ocr.space/parse/image", {
       method: "POST",
       headers: {
-        apikey: "helloworld", // Free test API key
+        apikey: "K84952735488957", // Free test API key
       },
       body: formData,
     });
@@ -64,70 +64,73 @@ export const performOCR = async (imageFile: File): Promise<string> => {
   }
 };
 
-// Text to Image using Stable Diffusion
 export const generateImage = async (prompt: string): Promise<string> => {
-  try {
-    const response = await fetch("https://api.deepai.org/api/text2img", {
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2",
+    {
       method: "POST",
       headers: {
-        "api-key": "quickstart-QUdJIGlzIGNvbWluZy4uLi4K", // Free test API key
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: prompt }),
-    });
-
-    const data: ImageGenerationResponse = await response.json();
-    console.log("Image Generation Response:", data);
-
-    if (data.error || !data.output_url) {
-      throw new Error(data.error || "No image URL received from the service");
+      body: JSON.stringify({ inputs: prompt }),
     }
+  );
 
-    return data.output_url;
-  } catch (error) {
-    console.error("Image Generation Error:", error);
-    throw new Error(
-      "Image generation failed: " +
-        (error instanceof Error ? error.message : "Unknown error")
-    );
+  if (!response.ok) {
+    throw new Error("Image generation failed");
   }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
 };
+// Text to Image using Stable Diffusion
+// export const generateImage = async (prompt: string): Promise<string> => {
+//   try {
+//     const response = await fetch("https://api.deepai.org/api/text2img", {
+//       method: "POST",
+//       headers: {
+//         "api-key": "quickstart-QUdJIGlzIGNvbWluZy4uLi4K", // Free test API key
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ text: prompt }),
+//     });
+
+//     const data: ImageGenerationResponse = await response.json();
+//     console.log("Image Generation Response:", data);
+
+//     if (data.error || !data.output_url) {
+//       throw new Error(data.error || "No image URL received from the service");
+//     }
+
+//     return data.output_url;
+//   } catch (error) {
+//     console.error("Image Generation Error:", error);
+//     throw new Error(
+//       "Image generation failed: " +
+//         (error instanceof Error ? error.message : "Unknown error")
+//     );
+//   }
+// };
 
 // Text Summarization using TextCortex
 export const summarizeText = async (text: string): Promise<string> => {
-  try {
-    const response = await fetch(
-      "https://api.textcortex.com/v1/texts/summarizations",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer demo_key", // Free test API key
-        },
-        body: JSON.stringify({
-          text,
-          mode: "paragraph",
-          lang: "en",
-          max_tokens: 150,
-        }),
-      }
-    );
-
-    const data: SummarizationResponse = await response.json();
-    console.log("Summarization Response:", data);
-
-    if (data.error || !data.summary) {
-      throw new Error(data.error || "No summary received from the service");
+  const response = await fetch(
+    "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ inputs: text }),
     }
+  );
 
-    return data.summary;
-  } catch (error) {
-    console.error("Summarization Error:", error);
-    throw new Error(
-      "Text summarization failed: " +
-        (error instanceof Error ? error.message : "Unknown error")
-    );
+  const result = await response.json();
+  if (result.error || !result[0]?.summary_text) {
+    throw new Error("No summary received from the service");
   }
+
+  return result[0].summary_text;
 };
 
 // Translation using LibreTranslate
@@ -136,8 +139,9 @@ export const translateText = async (
   sourceLang: string = "auto",
   targetLang: string = "en"
 ): Promise<string> => {
-  try {
-    const response = await fetch("https://libretranslate.de/translate", {
+  const response = await fetch(
+    "https://translate.argosopentech.com/translate",
+    {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -146,22 +150,15 @@ export const translateText = async (
         q: text,
         source: sourceLang,
         target: targetLang,
+        format: "text",
       }),
-    });
-
-    const data: TranslationResponse = await response.json();
-    console.log("Translation Response:", data);
-
-    if (!data.translatedText) {
-      throw new Error("No translation received from the service");
     }
+  );
 
-    return data.translatedText;
-  } catch (error) {
-    console.error("Translation Error:", error);
-    throw new Error(
-      "Translation failed: " +
-        (error instanceof Error ? error.message : "Unknown error")
-    );
+  const data = await response.json();
+  if (!data.translatedText) {
+    throw new Error("No translation received from the service");
   }
+
+  return data.translatedText;
 };
