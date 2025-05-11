@@ -1,5 +1,5 @@
 import React from "react";
-import TabsContainer from "./components/TabsContainer";
+import TabsContainer from "./layouts/TabsContainer";
 
 const App: React.FC = () => {
   return <TabsContainer />;
