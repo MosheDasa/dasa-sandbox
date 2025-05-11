@@ -1,12 +1,16 @@
 import React, { useState } from "react";
 import ScreenCapture from "../pocs/screen-capture/ScreenCapture";
+import AITools from "../pocs/ai-tools/AITools";
 import LogViewer from "../components/common/LogViewer";
 import { Log, LogType } from "../types/common";
 import { theme } from "../styles/theme";
 
 const DEMOS = [
+  { id: "ai-tools", title: "AI Tools", component: AITools },
   { id: "screen-capture", title: "Screen Capture", component: ScreenCapture },
 ] as const;
+
+type DemoId = (typeof DEMOS)[number]["id"];
 
 const styles = {
   container: {
@@ -112,7 +116,7 @@ const styles = {
 };
 
 const TabsContainer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState(DEMOS[0].id);
+  const [activeTab, setActiveTab] = useState<DemoId>(DEMOS[0].id);
   const [logs, setLogs] = useState<Log[]>([]);
 
   const handleLog = (message: string, type: LogType) => {
