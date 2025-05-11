@@ -25,13 +25,16 @@ module.exports = {
           {
             loader: "css-loader",
             options: {
-              modules: true,
+              modules: {
+                localIdentName: "[name]__[local]__[hash:base64:5]",
+              },
             },
           },
         ],
       },
       {
-        test: /(?<!\.module)\.css$/,
+        test: /\.css$/,
+        exclude: /\.module\.css$/,
         use: ["style-loader", "css-loader"],
       },
     ],

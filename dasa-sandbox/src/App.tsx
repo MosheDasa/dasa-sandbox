@@ -1,13 +1,8 @@
 import React from "react";
-import ScreenShareComponent from "./components/ScreenShareComponent";
+import TabsContainer from "./components/TabsContainer";
 
 const App: React.FC = () => {
-  return (
-    <>
-      <h1>Dasa Sandbox</h1>
-      <ScreenShareComponent />
-    </>
-  );
+  return <TabsContainer />;
 };
 
 export default App;
