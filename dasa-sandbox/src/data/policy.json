@@ -1,0 +1,31 @@
+[
+  {
+    "policyNumber": "POL001",
+    "driverAge": 35,
+    "claimsHistory": 0,
+    "vehicleType": "sedan",
+    "lastClaimDate": null,
+    "claimDescriptions": []
+  },
+  {
+    "policyNumber": "POL002",
+    "driverAge": 22,
+    "claimsHistory": 2,
+    "vehicleType": "sports",
+    "lastClaimDate": "2023-06-15",
+    "claimDescriptions": [
+      "Minor collision with another vehicle",
+      "Windshield damage from road debris"
+    ]
+  },
+  {
+    "policyNumber": "POL003",
+    "driverAge": 45,
+    "claimsHistory": 1,
+    "vehicleType": "suv",
+    "lastClaimDate": "2022-12-01",
+    "claimDescriptions": [
+      "Hail damage to vehicle body"
+    ]
+  }
+]

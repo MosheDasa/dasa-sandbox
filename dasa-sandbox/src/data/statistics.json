@@ -1,0 +1,17 @@
+{
+  "riskFactors": {
+    "age": 1.5,
+    "claims": 2.0,
+    "recentClaims": 3.0,
+    "default": 1.0,
+    "sedan": 1.2,
+    "suv": 1.5,
+    "sports": 2.0,
+    "luxury": 1.8,
+    "commercial": 2.2
+  },
+  "thresholds": {
+    "highRisk": 7.0,
+    "mediumRisk": 4.0
+  }
+}
